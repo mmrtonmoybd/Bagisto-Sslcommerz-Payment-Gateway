@@ -24,7 +24,7 @@ Sslcommerz is a popular payment gateway in Bangladesh. This package provides a a
 ## Manual Installation
 1. Download the zip folder from the github repository.
 2. Unzip the folder and go to your bagisto application path `package` and create a folder name `Mmrtonmoybd\Sslcommerz` upload `src` folder inside this path.
-3. Now open `config/app.php` and register payu provider.
+3. Now open `config/app.php` and register sslcommerz provider.
 ```sh
 'providers' => [
         // Sslcommerz provider
