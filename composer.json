@@ -1,0 +1,26 @@
+{
+    "name": "mmrtonmoybd/sslcommerz",
+    "description": "Sslcommerz payment gateway for bagisto laravel ecommerce open source platform.",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Mmrtonmoybd\\Sslcommerz\\": "src/"
+        }
+    },
+	"extra": {
+        "laravel": {
+            "providers": [
+                "Mmrtonmoybd\\Sslcommerz\\Providers\\SslcommerzServiceProvider"
+            ],
+            "aliases": {}
+        }
+    },
+    "authors": [
+        {
+            "name": "Moshiur Rahman Tonmoy",
+            "email": "rmedha037@gmail.com"
+        }
+    ],
+    "minimum-stability": "dev",
+    "require": {}
+}
