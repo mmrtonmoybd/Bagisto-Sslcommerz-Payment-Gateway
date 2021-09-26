@@ -2,7 +2,7 @@
 Sslcommerz is a popular payment gateway in Bangladesh. This package provides a additional strong help for the user to use the sslcommerz payment gateway in their Bagisto laravel ecommerce application.
 
 ## Automatic Installation
-1. Use command prompt to run this package `composer require mmrtonmoybd/bagisto-sslcommerz`
+1. Use command prompt to run this package `composer require mmrtonmoybd/sslcommerz`
 2. Now open `config/app.php` and register sslcommerz provider.
 ```sh
 'providers' => [
