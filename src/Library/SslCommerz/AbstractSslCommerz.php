@@ -1,4 +1,5 @@
 <?php
+
 namespace Mmrtonmoybd\Sslcommerz\Library\SslCommerz;
 
 abstract class AbstractSslCommerz implements SslCommerzInterface
@@ -38,9 +39,10 @@ abstract class AbstractSslCommerz implements SslCommerzInterface
     }
 
     /**
-     * @param $data
+     * @param       $data
      * @param array $header
-     * @param bool $setLocalhost
+     * @param bool  $setLocalhost
+     *
      * @return bool|string
      */
     public function callToApi($data, $header = [], $setLocalhost = false)
@@ -70,18 +72,19 @@ abstract class AbstractSslCommerz implements SslCommerzInterface
         $curlErrorNo = curl_errno($curl);
         curl_close($curl);
 
-        if ($code == 200 & !($curlErrorNo)) {
+        if ($code == 200 & !$curlErrorNo) {
             return $response;
         } else {
-            return "FAILED TO CONNECT WITH SSLCOMMERZ API";
+            return 'FAILED TO CONNECT WITH SSLCOMMERZ API';
             //return "cURL Error #:" . $err;
         }
     }
 
     /**
-     * @param $response
+     * @param        $response
      * @param string $type
      * @param string $pattern
+     *
      * @return false|mixed|string
      */
     public function formatResponse($response, $type = 'checkout', $pattern = 'json')
@@ -91,10 +94,10 @@ abstract class AbstractSslCommerz implements SslCommerzInterface
         if ($type != 'checkout') {
             return $sslcz;
         } else {
-            if (isset($sslcz['GatewayPageURL']) && $sslcz['GatewayPageURL'] != "") {
+            if (isset($sslcz['GatewayPageURL']) && $sslcz['GatewayPageURL'] != '') {
                 // this is important to show the popup, return or echo to send json response back
-                if($this->getApiUrl() != null && $this->getApiUrl() == 'https://securepay.sslcommerz.com') {
-                   $response = json_encode(['status' => 'SUCCESS', 'data' => $sslcz['GatewayPageURL'], 'logo' => $sslcz['storeLogo']]);
+                if ($this->getApiUrl() != null && $this->getApiUrl() == 'https://securepay.sslcommerz.com') {
+                    $response = json_encode(['status' => 'SUCCESS', 'data' => $sslcz['GatewayPageURL'], 'logo' => $sslcz['storeLogo']]);
                 } else {
                     $response = json_encode(['status' => 'success', 'data' => $sslcz['GatewayPageURL'], 'logo' => $sslcz['storeLogo']]);
                 }
@@ -111,13 +114,13 @@ abstract class AbstractSslCommerz implements SslCommerzInterface
     }
 
     /**
-     * @param $url
+     * @param      $url
      * @param bool $permanent
      */
     public function redirect($url, $permanent = false)
     {
-        header('Location: ' . $url, true, $permanent ? 301 : 302);
+        header('Location: '.$url, true, $permanent ? 301 : 302);
 
-        exit();
+        exit;
     }
 }
