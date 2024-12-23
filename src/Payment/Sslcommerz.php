@@ -7,14 +7,15 @@ use Webkul\Payment\Payment\Payment;
 class Sslcommerz extends Payment
 {
     /**
-     * Payment method code.
+     * Payment method code
      *
      * @var string
      */
-    protected $code = 'sslcommerz';
+    protected $code  = 'sslcommerz';
 
     public function getRedirectUrl()
     {
         return route('sslcommerz.process');
+        
     }
 }

@@ -19,7 +19,7 @@ return [
                 'type'          => 'textarea',
                 'channel_based' => false,
                 'locale_based'  => true,
-            ],
+            ], 
             [
                 'name'          => 'sslcommerz_store_id',
                 'title'         => 'admin::app.admin.system.sslcommerz-store-id',
@@ -27,8 +27,8 @@ return [
                 'validation'    => 'required',
                 'channel_based' => false,
                 'locale_based'  => true,
-            ],
-            [
+            ],	
+			[
                 'name'          => 'sslcommerz_store_password',
                 'title'         => 'admin::app.admin.system.sslcommerz-store-password',
                 'type'          => 'text',
@@ -36,7 +36,7 @@ return [
                 'channel_based' => false,
                 'locale_based'  => true,
             ],
-            [
+           [
                 'name'          => 'sandbox',
                 'title'         => 'admin::app.admin.system.sandbox',
                 'type'          => 'boolean',
@@ -60,7 +60,7 @@ return [
                 'channel_based' => false,
                 'locale_based'  => true,
             ],
-            [
+             [
                 'name'    => 'sort',
                 'title'   => 'admin::app.admin.system.sort_order',
                 'type'    => 'select',
@@ -79,7 +79,7 @@ return [
                         'value' => 4,
                     ],
                 ],
-            ],
-        ],
-    ],
+            ]
+        ]
+    ]
 ];
