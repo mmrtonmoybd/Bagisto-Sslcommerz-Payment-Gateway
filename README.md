@@ -18,7 +18,7 @@ Sslcommerz is a popular payment gateway in Bangladesh. This package provides a a
 'sslcommerz-websitestatus' => 'SSLCOMMERZ Environment',
 'sslcommerz-connect-from-localhost' => 'SSLCOMMERZ connect from localhost',
 ```
-4. Now go to your bagisto admin section `admin/configuration/sales/paymentmethods` you will see the new payment gateway payu. 
+4. Now go to your bagisto admin section `admin/configuration/sales/paymentmethods` you will see the new payment gateway Sslcommerz. 
 6. Now run `php artisan config:cache`
 
 ## Manual Installation
