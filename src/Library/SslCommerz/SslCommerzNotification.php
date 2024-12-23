@@ -1,4 +1,5 @@
 <?php
+
 namespace Mmrtonmoybd\Sslcommerz\Library\SslCommerz;
 
 class SslCommerzNotification extends AbstractSslCommerz
@@ -22,10 +23,11 @@ class SslCommerzNotification extends AbstractSslCommerz
         $this->setStorePassword(core()->getConfigData('sales.paymentmethods.sslcommerz.sslcommerz_store_password'));
     }
 
-    public function orderValidate($post_data, $trx_id = '', $amount = 0, $currency = "BDT")
+    public function orderValidate($post_data, $trx_id = '', $amount = 0, $currency = 'BDT')
     {
         if ($post_data == '' && $trx_id == '' && !is_array($post_data)) {
-            $this->error = "Please provide valid transaction ID and post request data";
+            $this->error = 'Please provide valid transaction ID and post request data';
+
             return $this->error;
         }
 
@@ -38,57 +40,52 @@ class SslCommerzNotification extends AbstractSslCommerz
         }
     }
 
-
-    # VALIDATE SSLCOMMERZ TRANSACTION
+    // VALIDATE SSLCOMMERZ TRANSACTION
     protected function validate($merchant_trans_id, $merchant_trans_amount, $merchant_trans_currency, $post_data)
     {
-        # MERCHANT SYSTEM INFO
-        if ($merchant_trans_id != "" && $merchant_trans_amount != 0) {
-
-            # CALL THE FUNCTION TO CHECK THE RESULT
+        // MERCHANT SYSTEM INFO
+        if ($merchant_trans_id != '' && $merchant_trans_amount != 0) {
+            // CALL THE FUNCTION TO CHECK THE RESULT
             $post_data['store_id'] = $this->getStoreId();
             $post_data['store_pass'] = $this->getStorePassword();
 
             if ($this->SSLCOMMERZ_hash_verify($post_data, $this->getStorePassword())) {
-
                 $val_id = urlencode($post_data['val_id']);
                 $store_id = urlencode($this->getStoreId());
                 $store_passwd = urlencode($this->getStorePassword());
-                if (core()->getConfigData('sales.paymentmethods.sslcommerz.sandbox')) :
-			$SSLCOMMERZ_BASE_URL = "https://sandbox.sslcommerz.com";        // For Sandbox Mode
-		else :
-			$SSLCOMMERZ_BASE_URL = "https://securepay.sslcommerz.com";        // For live Mode
-		endif;
-                $requested_url = ($SSLCOMMERZ_BASE_URL . $this->config['apiUrl']['order_validate'] . "?val_id=" . $val_id . "&store_id=" . $store_id . "&store_passwd=" . $store_passwd . "&v=1&format=json");
+                if (core()->getConfigData('sales.paymentmethods.sslcommerz.sandbox')) {
+                    $SSLCOMMERZ_BASE_URL = 'https://sandbox.sslcommerz.com';        // For Sandbox Mode
+                } else {
+                    $SSLCOMMERZ_BASE_URL = 'https://securepay.sslcommerz.com';        // For live Mode
+                }
+                $requested_url = ($SSLCOMMERZ_BASE_URL.$this->config['apiUrl']['order_validate'].'?val_id='.$val_id.'&store_id='.$store_id.'&store_passwd='.$store_passwd.'&v=1&format=json');
 
                 $handle = curl_init();
                 curl_setopt($handle, CURLOPT_URL, $requested_url);
                 curl_setopt($handle, CURLOPT_RETURNTRANSFER, true);
 
-                 if (core()->getConfigData('sales.paymentmethods.sslcommerz.sslcommerz_connect_from_localhost')) {
-                     curl_setopt($handle, CURLOPT_SSL_VERIFYHOST, 0);
-                     curl_setopt($handle, CURLOPT_SSL_VERIFYPEER, 0);
-                 } else {
-                     curl_setopt($handle, CURLOPT_SSL_VERIFYHOST, 2);
-                     curl_setopt($handle, CURLOPT_SSL_VERIFYPEER, 2);
-                 }
-
+                if (core()->getConfigData('sales.paymentmethods.sslcommerz.sslcommerz_connect_from_localhost')) {
+                    curl_setopt($handle, CURLOPT_SSL_VERIFYHOST, 0);
+                    curl_setopt($handle, CURLOPT_SSL_VERIFYPEER, 0);
+                } else {
+                    curl_setopt($handle, CURLOPT_SSL_VERIFYHOST, 2);
+                    curl_setopt($handle, CURLOPT_SSL_VERIFYPEER, 2);
+                }
 
                 $result = curl_exec($handle);
 
                 $code = curl_getinfo($handle, CURLINFO_HTTP_CODE);
 
-                if ($code == 200 && !(curl_errno($handle))) {
+                if ($code == 200 && !curl_errno($handle)) {
+                    // TO CONVERT AS ARRAY
+                    // $result = json_decode($result, true);
+                    // $status = $result['status'];
 
-                    # TO CONVERT AS ARRAY
-                    # $result = json_decode($result, true);
-                    # $status = $result['status'];
-
-                    # TO CONVERT AS OBJECT
+                    // TO CONVERT AS OBJECT
                     $result = json_decode($result);
                     $this->sslc_data = $result;
 
-                    # TRANSACTION INFO
+                    // TRANSACTION INFO
                     $status = $result->status;
                     $tran_date = $result->tran_date;
                     $tran_id = $result->tran_id;
@@ -100,26 +97,27 @@ class SslCommerzNotification extends AbstractSslCommerz
                     $currency_type = $result->currency_type;
                     $currency_amount = $result->currency_amount;
 
-                    # ISSUER INFO
+                    // ISSUER INFO
                     $card_no = $result->card_no;
                     $card_issuer = $result->card_issuer;
                     $card_brand = $result->card_brand;
                     $card_issuer_country = $result->card_issuer_country;
                     $card_issuer_country_code = $result->card_issuer_country_code;
 
-                    # API AUTHENTICATION
+                    // API AUTHENTICATION
                     $APIConnect = $result->APIConnect;
                     $validated_on = $result->validated_on;
                     $gw_version = $result->gw_version;
 
-                    # GIVE SERVICE
-                    if ($status == "VALID" || $status == "VALIDATED") {
-                        if ($merchant_trans_currency == "BDT") {
+                    // GIVE SERVICE
+                    if ($status == 'VALID' || $status == 'VALIDATED') {
+                        if ($merchant_trans_currency == 'BDT') {
                             if (trim($merchant_trans_id) == trim($tran_id) && (abs($merchant_trans_amount - $amount) < 1) && trim($merchant_trans_currency) == trim('BDT')) {
                                 return true;
                             } else {
-                                # DATA TEMPERED
-                                $this->error = "Data has been tempered";
+                                // DATA TEMPERED
+                                $this->error = 'Data has been tempered';
+
                                 return false;
                             }
                         } else {
@@ -127,94 +125,100 @@ class SslCommerzNotification extends AbstractSslCommerz
                             if (trim($merchant_trans_id) == trim($tran_id) && (abs($merchant_trans_amount - $currency_amount) < 1) && trim($merchant_trans_currency) == trim($currency_type)) {
                                 return true;
                             } else {
-                                # DATA TEMPERED
-                                $this->error = "Data has been tempered";
+                                // DATA TEMPERED
+                                $this->error = 'Data has been tempered';
+
                                 return false;
                             }
                         }
                     } else {
-                        # FAILED TRANSACTION
-                        $this->error = "Failed Transaction";
+                        // FAILED TRANSACTION
+                        $this->error = 'Failed Transaction';
+
                         return false;
                     }
                 } else {
-                    # Failed to connect with SSLCOMMERZ
-                    $this->error = "Faile to connect with SSLCOMMERZ";
+                    // Failed to connect with SSLCOMMERZ
+                    $this->error = 'Faile to connect with SSLCOMMERZ';
+
                     return false;
                 }
             } else {
-                # Hash validation failed
-                $this->error = "Hash validation failed";
+                // Hash validation failed
+                $this->error = 'Hash validation failed';
+
                 return false;
             }
         } else {
-            # INVALID DATA
-            $this->error = "Invalid data";
+            // INVALID DATA
+            $this->error = 'Invalid data';
+
             return false;
         }
     }
 
-    # FUNCTION TO CHECK HASH VALUE
-    protected function SSLCOMMERZ_hash_verify($post_data, $store_passwd = "")
+    // FUNCTION TO CHECK HASH VALUE
+    protected function SSLCOMMERZ_hash_verify($post_data, $store_passwd = '')
     {
         if (isset($post_data) && isset($post_data['verify_sign']) && isset($post_data['verify_key'])) {
-            # NEW ARRAY DECLARED TO TAKE VALUE OF ALL POST
+            // NEW ARRAY DECLARED TO TAKE VALUE OF ALL POST
             $pre_define_key = explode(',', $post_data['verify_key']);
 
-            $new_data = array();
+            $new_data = [];
             if (!empty($pre_define_key)) {
                 foreach ($pre_define_key as $value) {
 //                    if (isset($post_data[$value])) {
-                        $new_data[$value] = ($post_data[$value]);
+                    $new_data[$value] = $post_data[$value];
 //                    }
                 }
             }
-            # ADD MD5 OF STORE PASSWORD
+            // ADD MD5 OF STORE PASSWORD
             $new_data['store_passwd'] = md5($store_passwd);
 
-            # SORT THE KEY AS BEFORE
+            // SORT THE KEY AS BEFORE
             ksort($new_data);
 
-            $hash_string = "";
+            $hash_string = '';
             foreach ($new_data as $key => $value) {
-                $hash_string .= $key . '=' . ($value) . '&';
+                $hash_string .= $key.'='.$value.'&';
             }
             $hash_string = rtrim($hash_string, '&');
 
             if (md5($hash_string) == $post_data['verify_sign']) {
-
                 return true;
-
             } else {
-                $this->error = "Verification signature not matched";
+                $this->error = 'Verification signature not matched';
+
                 return false;
             }
         } else {
             $this->error = 'Required data mission. ex: verify_key, verify_sign';
+
             return false;
         }
     }
 
     /**
-     * @param array $requestData
+     * @param array  $requestData
      * @param string $type
      * @param string $pattern
+     *
      * @return false|mixed|string
      */
     public function makePayment(array $requestData, $type = 'checkout', $pattern = 'json')
     {
         if (empty($requestData)) {
-            return "Please provide a valid information list about transaction with transaction id, amount, success url, fail url, cancel url, store id and pass at least";
+            return 'Please provide a valid information list about transaction with transaction id, amount, success url, fail url, cancel url, store id and pass at least';
         }
 
         $header = [];
-        if (core()->getConfigData('sales.paymentmethods.sslcommerz.sandbox')) :
-			$SSLCOMMERZ_BASE_URL = "https://sandbox.sslcommerz.com";        // For Sandbox Mode
-		else :
-			$SSLCOMMERZ_BASE_URL = "https://securepay.sslcommerz.com";        // For live Mode
-		endif;
+        if (core()->getConfigData('sales.paymentmethods.sslcommerz.sandbox')) {
+            $SSLCOMMERZ_BASE_URL = 'https://sandbox.sslcommerz.com';        // For Sandbox Mode
+        } else {
+            $SSLCOMMERZ_BASE_URL = 'https://securepay.sslcommerz.com';        // For live Mode
+        }
 
-        $this->setApiUrl($SSLCOMMERZ_BASE_URL . $this->config['apiUrl']['make_payment']);
+        $this->setApiUrl($SSLCOMMERZ_BASE_URL.$this->config['apiUrl']['make_payment']);
 
         // Set the required/additional params
         $this->setParams($requestData);
@@ -231,14 +235,14 @@ class SslCommerzNotification extends AbstractSslCommerz
             if (isset($formattedResponse['GatewayPageURL']) && $formattedResponse['GatewayPageURL'] != '') {
                 $this->redirect($formattedResponse['GatewayPageURL']);
             } else {
-                $errorMessage = "No redirect URL found!";
+                $errorMessage = 'No redirect URL found!';
+
                 return $errorMessage;
             }
         } else {
             return $formattedResponse;
         }
     }
-
 
     protected function setSuccessUrl()
     {
@@ -272,19 +276,19 @@ class SslCommerzNotification extends AbstractSslCommerz
 
     public function setParams($requestData)
     {
-        ##  Integration Required Parameters
+        //#  Integration Required Parameters
         $this->setRequiredInfo($requestData);
 
-        ##  Customer Information
+        //#  Customer Information
         $this->setCustomerInfo($requestData);
 
-        ##  Shipment Information
+        //#  Shipment Information
         $this->setShipmentInfo($requestData);
 
-        ##  Product Information
+        //#  Product Information
         $this->setProductInfo($requestData);
 
-        ##  Customized or Additional Parameters
+        //#  Customized or Additional Parameters
         $this->setAdditionalInfo($requestData);
     }
 
@@ -365,12 +369,12 @@ class SslCommerzNotification extends AbstractSslCommerz
          * */
         $this->data['allowed_bin'] = (isset($info['allowed_bin'])) ? $info['allowed_bin'] : null;
 
-        ##   Parameters to Handle EMI Transaction ##
+        //#   Parameters to Handle EMI Transaction ##
         $this->data['emi_option'] = (isset($info['emi_option'])) ? $info['emi_option'] : null; // integer (1)	Mandatory - This is mandatory if transaction is EMI enabled and Value must be 1/0. Here, 1 means customer will get EMI facility for this transaction
         $this->data['emi_max_inst_option'] = (isset($info['emi_max_inst_option'])) ? $info['emi_max_inst_option'] : null; // integer (2)	Max instalment Option, Here customer will get 3,6, 9 instalment at gateway page
         $this->data['emi_selected_inst'] = (isset($info['emi_selected_inst'])) ? $info['emi_selected_inst'] : null; // integer (2)	Customer has selected from your Site, So no instalment option will be displayed at gateway page
-        $this->data['emi_allow_only'] = (isset($info['emi_allow_only'])) ? $info['emi_allow_only'] : 0; 
-        
+        $this->data['emi_allow_only'] = (isset($info['emi_allow_only'])) ? $info['emi_allow_only'] : 0;
+
         return $this->data;
     }
 
@@ -392,7 +396,6 @@ class SslCommerzNotification extends AbstractSslCommerz
 
     public function setShipmentInfo(array $info)
     {
-
         $this->data['shipping_method'] = $info['shipping_method']; // string (50)	Mandatory - Shipping method of the order. Example: YES or NO or Courier
         $this->data['num_of_item'] = isset($info['num_of_item']) ? $info['num_of_item'] : 1; // integer (1)	Mandatory - No of product will be shipped. Example: 1 or 2 or etc
         $this->data['ship_name'] = $info['ship_name']; // string (50)	Mandatory, if shipping_method is YES - Shipping Address of your order. Not mandatory but useful if provided
@@ -408,7 +411,6 @@ class SslCommerzNotification extends AbstractSslCommerz
 
     public function setProductInfo(array $info)
     {
-
         $this->data['product_name'] = (isset($info['product_name'])) ? $info['product_name'] : ''; // String (256)	Mandatory - Mention the product name briefly. Mention the product name by coma separate. Example: Computer,Speaker
         $this->data['product_category'] = (isset($info['product_category'])) ? $info['product_category'] : ''; // String (100)	Mandatory - Mention the product category. Example: Electronic or topup or bus ticket or air ticket
 
