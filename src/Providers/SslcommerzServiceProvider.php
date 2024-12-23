@@ -13,7 +13,7 @@ class SslcommerzServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        $this->loadRoutesFrom(__DIR__ . '/../routes/web.php');
+        $this->loadRoutesFrom(__DIR__.'/../routes/web.php');
     }
 
     /**
@@ -25,7 +25,7 @@ class SslcommerzServiceProvider extends ServiceProvider
     {
         $this->registerConfig();
     }
-    
+
     /**
      * Register package config.
      *
@@ -34,15 +34,15 @@ class SslcommerzServiceProvider extends ServiceProvider
     protected function registerConfig()
     {
         $this->mergeConfigFrom(
-            dirname(__DIR__) . '/Config/paymentmethods.php', 'paymentmethods'
+            dirname(__DIR__).'/Config/paymentmethods.php', 'paymentmethods'
         );
 
         $this->mergeConfigFrom(
-            dirname(__DIR__) . '/Config/system.php', 'core'
+            dirname(__DIR__).'/Config/system.php', 'core'
         );
 
         $this->mergeConfigFrom(
-            dirname(__DIR__) . '/Config/sslcommerz.php', 'sslcommerz'
+            dirname(__DIR__).'/Config/sslcommerz.php', 'sslcommerz'
         );
     }
 }
