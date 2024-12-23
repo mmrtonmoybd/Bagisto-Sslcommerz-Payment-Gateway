@@ -14,6 +14,7 @@ class SslcommerzServiceProvider extends ServiceProvider
     public function boot()
     {
         $this->loadRoutesFrom(__DIR__.'/../routes/web.php');
+        $this->loadTranslationsFrom(__DIR__.'/../Resources/lang', 'sslcommerz');
     }
 
     /**
@@ -34,7 +35,7 @@ class SslcommerzServiceProvider extends ServiceProvider
     protected function registerConfig()
     {
         $this->mergeConfigFrom(
-            dirname(__DIR__).'/Config/paymentmethods.php', 'paymentmethods'
+            dirname(__DIR__).'/Config/paymentmethods.php', 'payment_methods'
         );
 
         $this->mergeConfigFrom(

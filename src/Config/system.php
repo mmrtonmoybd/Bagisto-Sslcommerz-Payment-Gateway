@@ -2,9 +2,10 @@
 
 return [
     [
-        'key' => 'sales.paymentmethods.sslcommerz',
-        'name' => 'admin::app.admin.system.sslcommerz',
-        'sort' => 5,
+        'key' => 'sales.payment_methods.sslcommerz',
+        'name' => 'sslcommerz::app.sslcommerz.name',
+        'info'   => 'sslcommerz::app.sslcommerz.info',
+        'sort' => 0,
         'fields' => [
             [
                 'name' => 'title',
@@ -22,7 +23,7 @@ return [
             ],
             [
                 'name' => 'sslcommerz_store_id',
-                'title' => 'admin::app.admin.system.sslcommerz-store-id',
+                'title' => 'sslcommerz::app.sslcommerz.system.sslcommerz-store-id',
                 'type' => 'text',
                 'validation' => 'required',
                 'channel_based' => false,
@@ -30,7 +31,7 @@ return [
             ],
             [
                 'name' => 'sslcommerz_store_password',
-                'title' => 'admin::app.admin.system.sslcommerz-store-password',
+                'title' => 'sslcommerz::app.sslcommerz.system.sslcommerz-store-password',
                 'type' => 'text',
                 'validation' => 'required',
                 'channel_based' => false,
@@ -38,7 +39,7 @@ return [
             ],
             [
                 'name' => 'sandbox',
-                'title' => 'admin::app.admin.system.sandbox',
+                'title' => 'sslcommerz::app.sslcommerz.system.sandbox',
                 'type' => 'boolean',
                 'validation' => 'required',
                 'channel_based' => false,
@@ -46,7 +47,7 @@ return [
             ],
             [
                 'name' => 'sslcommerz_connect_from_localhost',
-                'title' => 'admin::app.admin.system.sslcommerz-connect-from-localhost',
+                'title' => 'sslcommerz::app.sslcommerz.system.sslcommerz-connect-from-localhost',
                 'type' => 'boolean',
                 'validation' => 'required',
                 'channel_based' => false,
@@ -54,7 +55,7 @@ return [
             ],
             [
                 'name' => 'active',
-                'title' => 'admin::app.admin.system.status',
+                'title' => 'sslcommerz::app.sslcommerz.system.status',
                 'type' => 'boolean',
                 'validation' => 'required',
                 'channel_based' => false,

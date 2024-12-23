@@ -3,23 +3,8 @@ Sslcommerz is a popular payment gateway in Bangladesh. This package provides a a
 
 ## Automatic Installation
 1. Use command prompt to run this package `composer require mmrtonmoybd/sslcommerz`
-2. Now open `config/app.php` and register sslcommerz provider.
-```sh
-'providers' => [
-        // Sslcommerz provider
-       Mmrtonmoybd\Sslcommerz\Providers\SslcommerzServiceProvider::class,
-]
-```
-3. Now go to `package/Webkul/Admin/src/Resources/lang/en` copy these line at the bottom end of code.
-```sh
-'sslcommerz' => 'SSLCOMMERZ payment gateway',
-'sslcommerz-store-id' => 'SSLCOMMERZ Store ID',
-'sslcommerz-store-password' => 'SSLCOMMERZ Store Password',
-'sslcommerz-websitestatus' => 'SSLCOMMERZ Environment',
-'sslcommerz-connect-from-localhost' => 'SSLCOMMERZ connect from localhost',
-```
-4. Now go to your bagisto admin section `admin/configuration/sales/paymentmethods` you will see the new payment gateway Sslcommerz. 
-6. Now run `php artisan config:cache`
+5. Now go to your bagisto admin section `admin/configuration/sales/paymentmethods` you will see the new payment gateway Sslcommerz. 
+3. Now run `php artisan config:cache`
 
 ## Manual Installation
 1. Download the zip folder from the github repository.
@@ -39,17 +24,9 @@ Sslcommerz is a popular payment gateway in Bangladesh. This package provides a a
         }
     }
 ```
-5. Now go to `package/Webkul/Admin/src/Resources/lang/en` copy these line at the bottom end of code.
-```sh
- 'sslcommerz' => 'SSLCOMMERZ payment gateway',
-'sslcommerz-store-id' => 'SSLCOMMERZ Store ID',
-'sslcommerz-store-password' => 'SSLCOMMERZ Store Password',
-'sslcommerz-websitestatus' => 'SSLCOMMERZ Environment',
-'sslcommerz-connect-from-localhost' => 'SSLCOMMERZ connect from localhost',
-```
-6. Now open the command prompt and run `composer dump-autoload`.
-7. Now run `php artisan config:cache`
-9. Now go to your bagisto admin section `admin/configuration/sales/paymentmethods` you will see the new payment gateway sslcommerz. 
+5. Now open the command prompt and run `composer dump-autoload`.
+6. Now run `php artisan config:cache`
+7. Now go to your bagisto admin section `admin/configuration/sales/paymentmethods` you will see the new payment gateway sslcommerz. 
 
 ## Troubleshooting
 
