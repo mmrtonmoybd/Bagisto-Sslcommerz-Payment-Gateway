@@ -9,14 +9,14 @@ return [
         'fields' => [
             [
                 'name' => 'title',
-                'title' => 'admin::app.admin.system.title',
+                'title' => 'sslcommerz::app.sslcommerz.system.title',
                 'type' => 'text',
                 'validation' => 'required',
                 'channel_based' => false,
                 'locale_based' => true,
             ], [
                 'name' => 'description',
-                'title' => 'admin::app.admin.system.description',
+                'title' => 'sslcommerz::app.sslcommerz.system.description',
                 'type' => 'textarea',
                 'channel_based' => false,
                 'locale_based' => true,
@@ -39,7 +39,7 @@ return [
             ],
             [
                 'name' => 'sandbox',
-                'title' => 'sslcommerz::app.sslcommerz.system.sandbox',
+                'title' => 'sslcommerz::app.sslcommerz.system.sslcommerz-websitestatus',
                 'type' => 'boolean',
                 'validation' => 'required',
                 'channel_based' => false,
@@ -54,6 +54,14 @@ return [
                 'locale_based' => true,
             ],
             [
+                'name'          => 'image',
+                'title'         => 'sslcommerz::app.sslcommerz.system.image',
+                'info'          => 'admin::app.configuration.index.sales.payment-methods.logo-information',
+                'type'          => 'file',
+                'channel_based' => false,
+                'locale_based'  => true,
+            ],
+            [
                 'name' => 'active',
                 'title' => 'sslcommerz::app.sslcommerz.system.status',
                 'type' => 'boolean',
@@ -63,7 +71,7 @@ return [
             ],
             [
                 'name' => 'sort',
-                'title' => 'admin::app.admin.system.sort_order',
+                'title' => 'sslcommerz::app.sslcommerz.system.sort_order',
                 'type' => 'select',
                 'options' => [
                     [
