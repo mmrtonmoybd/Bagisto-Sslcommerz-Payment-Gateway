@@ -7,6 +7,8 @@ use Mmrtonmoybd\Sslcommerz\Library\SslCommerz\SslCommerzNotification;
 use Webkul\Checkout\Facades\Cart;
 use Webkul\Sales\Repositories\InvoiceRepository;
 use Webkul\Sales\Repositories\OrderRepository;
+use Webkul\Sales\Transformers\OrderResource;
+use Webkul\Sales\Models\OrderPayment;
 
 class SslCommerzPaymentController extends Controller
 {
@@ -64,8 +66,7 @@ class SslCommerzPaymentController extends Controller
 
         // SHIPMENT INFORMATION
         $post_data['ship_name'] = $cart->shipping_method;
-        $post_data['ship_add1'] = $information->address1;
-        $post_data['ship_add2'] = $information->address2;
+        $post_data['ship_add1'] = $information->address;
         $post_data['ship_city'] = $information->city;
         $post_data['ship_state'] = $information->state;
         $post_data['ship_postcode'] = $information->postcode;
@@ -107,6 +108,7 @@ class SslCommerzPaymentController extends Controller
      *
      * @return array
      */
+     /*
     protected function prepareInvoiceData($order)
     {
         $invoiceData = ['order_id' => $order->id];
@@ -117,6 +119,8 @@ class SslCommerzPaymentController extends Controller
 
         return $invoiceData;
     }
+    
+    */
 
     public function success(Request $request)
     {
@@ -124,15 +128,17 @@ class SslCommerzPaymentController extends Controller
         $amount = $request->input('amount');
         $currency = $request->input('currency');
         $cart = Cart::getCart();
+        
         $shipping_rate = $cart->selected_shipping_rate ? $cart->selected_shipping_rate->price : 0; // shipping rate
         $discount_amount = $cart->discount_amount; // discount amount
-        $total_amount = ($cart->sub_total + $cart->tax_total + $shipping_rate) - $discount_amount; // total amount
+        $total_amount = $cart->grand_total; // total amount
         $information = $cart->billing_address;
         $cart_currency = $cart->cart_currency_code;
         $sslc = new SslCommerzNotification();
         $validation = $sslc->orderValidate($request->all(), $cart->id, $total_amount, $cart_currency);
 
         if ($validation == true) {
+            /*
             $order = $this->orderRepository->create(Cart::prepareDataForOrder());
             $this->orderRepository->update(['status' => 'processing'], $order->id);
             if ($order->canInvoice()) {
@@ -143,7 +149,40 @@ class SslCommerzPaymentController extends Controller
 
             // Order and prepare invoice
             return redirect()->route('shop.checkout.success');
+            
+            */
+            
+        $data = (new OrderResource($cart))->jsonSerialize();
+
+        $order = $this->orderRepository->create($data);
+
+        $this->savePaymentTransactionId($order['id'], $tran_id);
+
+        if ($order->canInvoice()) {
+            $this->invoiceRepository->create($this->prepareInvoiceData($order));
         }
+        
+        Cart::deActivateCart();
+
+        session()->flash('order_id', $order->id);
+
+        return redirect()->route('shop.checkout.onepage.success');
+        
+        }
+    }
+    
+    protected function prepareInvoiceData($order): array
+    {
+        $invoiceData = [
+            'order_id' => $order->id,
+            'invoice'  => ['items' => []],
+        ];
+
+        foreach ($order->items as $item) {
+            $invoiceData['invoice']['items'][$item->id] = $item->qty_to_invoice;
+        }
+
+        return $invoiceData;
     }
 
     public function fail(Request $request)
@@ -158,5 +197,10 @@ class SslCommerzPaymentController extends Controller
       */
     public function ipn(Request $request)
     {
+    }
+    
+    protected function savePaymentTransactionId(int $orderId, string $tran): void
+    {
+        OrderPayment::where('order_id', $orderId)->update(['additional' => $tran]);
     }
 }

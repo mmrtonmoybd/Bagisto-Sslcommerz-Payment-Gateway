@@ -3,6 +3,7 @@
 namespace Mmrtonmoybd\Sslcommerz\Payment;
 
 use Webkul\Payment\Payment\Payment;
+use Illuminate\Support\Facades\Storage;
 
 class Sslcommerz extends Payment
 {
@@ -16,5 +17,12 @@ class Sslcommerz extends Payment
     public function getRedirectUrl()
     {
         return route('sslcommerz.process');
+    }
+    
+    public function getImage(): string
+    {
+        $url = $this->getConfigData('image');
+
+        return $url ? Storage::url($url) : bagisto_asset('images/money-transfer.png', 'shop');
     }
 }

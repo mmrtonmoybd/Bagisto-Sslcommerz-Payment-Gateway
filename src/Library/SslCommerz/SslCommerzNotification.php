@@ -19,8 +19,8 @@ class SslCommerzNotification extends AbstractSslCommerz
     {
         $this->config = config('sslcommerz');
 
-        $this->setStoreId(core()->getConfigData('sales.paymentmethods.sslcommerz.sslcommerz_store_id'));
-        $this->setStorePassword(core()->getConfigData('sales.paymentmethods.sslcommerz.sslcommerz_store_password'));
+        $this->setStoreId(core()->getConfigData('sales.payment_methods.sslcommerz.sslcommerz_store_id'));
+        $this->setStorePassword(core()->getConfigData('sales.payment_methods.sslcommerz.sslcommerz_store_password'));
     }
 
     public function orderValidate($post_data, $trx_id = '', $amount = 0, $currency = 'BDT')
@@ -53,7 +53,7 @@ class SslCommerzNotification extends AbstractSslCommerz
                 $val_id = urlencode($post_data['val_id']);
                 $store_id = urlencode($this->getStoreId());
                 $store_passwd = urlencode($this->getStorePassword());
-                if (core()->getConfigData('sales.paymentmethods.sslcommerz.sandbox')) {
+                if (core()->getConfigData('sales.payment_methods.sslcommerz.sandbox')) {
                     $SSLCOMMERZ_BASE_URL = 'https://sandbox.sslcommerz.com';        // For Sandbox Mode
                 } else {
                     $SSLCOMMERZ_BASE_URL = 'https://securepay.sslcommerz.com';        // For live Mode
@@ -64,7 +64,7 @@ class SslCommerzNotification extends AbstractSslCommerz
                 curl_setopt($handle, CURLOPT_URL, $requested_url);
                 curl_setopt($handle, CURLOPT_RETURNTRANSFER, true);
 
-                if (core()->getConfigData('sales.paymentmethods.sslcommerz.sslcommerz_connect_from_localhost')) {
+                if (core()->getConfigData('sales.payment_methods.sslcommerz.sslcommerz_connect_from_localhost')) {
                     curl_setopt($handle, CURLOPT_SSL_VERIFYHOST, 0);
                     curl_setopt($handle, CURLOPT_SSL_VERIFYPEER, 0);
                 } else {
@@ -211,7 +211,7 @@ class SslCommerzNotification extends AbstractSslCommerz
         }
 
         $header = [];
-        if (core()->getConfigData('sales.paymentmethods.sslcommerz.sandbox')) {
+        if (core()->getConfigData('sales.payment_methods.sslcommerz.sandbox')) {
             $SSLCOMMERZ_BASE_URL = 'https://sandbox.sslcommerz.com';        // For Sandbox Mode
         } else {
             $SSLCOMMERZ_BASE_URL = 'https://securepay.sslcommerz.com';        // For live Mode
@@ -226,7 +226,7 @@ class SslCommerzNotification extends AbstractSslCommerz
         $this->setAuthenticationInfo();
 
         // Now, call the Gateway API
-        $response = $this->callToApi($this->data, $header, core()->getConfigData('sales.paymentmethods.sslcommerz.sslcommerz_connect_from_localhost'));
+        $response = $this->callToApi($this->data, $header, core()->getConfigData('sales.payment_methods.sslcommerz.sslcommerz_connect_from_localhost'));
 
         $formattedResponse = $this->formatResponse($response, $type, $pattern); // Here we will define the response pattern
         //dd($formattedResponse, $this->getStoreId(), $this->getStorePassword());

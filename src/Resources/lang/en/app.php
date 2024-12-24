@@ -9,10 +9,15 @@ return [
         'description' => 'SSLCOMMERZ',
 
         'system' => [
+            'title' => 'Title',
+            'description' => 'Description',
             'sslcommerz-store-id' => 'SSLCOMMERZ Store ID',
             'sslcommerz-store-password' => 'SSLCOMMERZ Store Password',
-            'sslcommerz-websitestatus' => 'SSLCOMMERZ Environment',
+            'sslcommerz-websitestatus' => 'SSLCOMMERZ Sandbox',
             'sslcommerz-connect-from-localhost' => 'SSLCOMMERZ connect from localhost',
+            'status' => 'Status',
+            'sort_order' => 'Sort Order',
+            'image' => 'Logo',
         ],
     ],
 
