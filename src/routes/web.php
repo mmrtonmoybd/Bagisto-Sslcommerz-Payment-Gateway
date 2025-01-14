@@ -12,6 +12,7 @@ Route::group(['middleware' => ['web']], function () {
 
         Route::post('/success', [SslCommerzPaymentController::class, 'success'])->name('sslcommerz.success')->withoutMiddleware(\App\Http\Middleware\VerifyCsrfToken::class);
         Route::post('/fail', [SslCommerzPaymentController::class, 'fail'])->name('sslcommerz.fail')->withoutMiddleware(\App\Http\Middleware\VerifyCsrfToken::class);
+        Route::post('/ipn', [SslCommerzPaymentController::class, 'ipn'])->name('sslcommerz.ipn')->withoutMiddleware(\App\Http\Middleware\VerifyCsrfToken::class);
     });
 });
 //SSLCOMMERZ END

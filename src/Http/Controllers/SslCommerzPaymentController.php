@@ -9,9 +9,13 @@ use Webkul\Sales\Repositories\InvoiceRepository;
 use Webkul\Sales\Repositories\OrderRepository;
 use Webkul\Sales\Transformers\OrderResource;
 use Webkul\Sales\Models\OrderPayment;
+use Webkul\Sales\Repositories\OrderTransactionRepository;
+use Webkul\Sales\Contracts\Order;
 
 class SslCommerzPaymentController extends Controller
 {
+    protected $iorder;
+    
     /**
      * OrderRepository $orderRepository.
      *
@@ -24,6 +28,8 @@ class SslCommerzPaymentController extends Controller
      * @var \Webkul\Sales\Repositories\InvoiceRepository
      */
     protected $invoiceRepository;
+    
+    protected $OrderTransactionRepository;
 
     /**
      * Create a new controller instance.
@@ -31,10 +37,11 @@ class SslCommerzPaymentController extends Controller
      *
      * @return void
      */
-    public function __construct(OrderRepository $orderRepository, InvoiceRepository $invoiceRepository)
+    public function __construct(OrderRepository $orderRepository, InvoiceRepository $invoiceRepository, OrderTransactionRepository $OrderTransactionRepository)
     {
         $this->orderRepository = $orderRepository;
         $this->invoiceRepository = $invoiceRepository;
+        $this->OrderTransactionRepository = $OrderTransactionRepository;
     }
 
     public function index()
@@ -45,7 +52,7 @@ class SslCommerzPaymentController extends Controller
         $cart = Cart::getCart();
         $shipping_rate = $cart->selected_shipping_rate ? $cart->selected_shipping_rate->price : 0; // shipping rate
         $discount_amount = $cart->discount_amount; // discount amount
-        $total_amount = ($cart->sub_total + $cart->tax_total + $shipping_rate) - $discount_amount; // total amount
+        $total_amount = $cart->grand_total; // total amount
         $information = $cart->billing_address;
 
         $post_data = [];
@@ -103,25 +110,6 @@ class SslCommerzPaymentController extends Controller
         }
     }
 
-    /**
-     * Prepares order's invoice data for creation.
-     *
-     * @return array
-     */
-     /*
-    protected function prepareInvoiceData($order)
-    {
-        $invoiceData = ['order_id' => $order->id];
-
-        foreach ($order->items as $item) {
-            $invoiceData['invoice']['items'][$item->id] = $item->qty_to_invoice;
-        }
-
-        return $invoiceData;
-    }
-    
-    */
-
     public function success(Request $request)
     {
         $tran_id = $request->input('tran_id');
@@ -138,19 +126,7 @@ class SslCommerzPaymentController extends Controller
         $validation = $sslc->orderValidate($request->all(), $cart->id, $total_amount, $cart_currency);
 
         if ($validation == true) {
-            /*
-            $order = $this->orderRepository->create(Cart::prepareDataForOrder());
-            $this->orderRepository->update(['status' => 'processing'], $order->id);
-            if ($order->canInvoice()) {
-                $this->invoiceRepository->create($this->prepareInvoiceData($order));
-            }
-            Cart::deActivateCart();
-            session()->flash('order', $order);
-
-            // Order and prepare invoice
-            return redirect()->route('shop.checkout.success');
             
-            */
             
         $data = (new OrderResource($cart))->jsonSerialize();
 
@@ -159,7 +135,18 @@ class SslCommerzPaymentController extends Controller
         $this->savePaymentTransactionId($order['id'], $tran_id);
 
         if ($order->canInvoice()) {
-            $this->invoiceRepository->create($this->prepareInvoiceData($order));
+            $invoice = $this->invoiceRepository->create($this->prepareInvoiceData($order));
+            
+            $this->OrderTransactionRepository->updateOrCreate([
+                'transaction_id' => $request->input('bank_tran_id'),
+                'status'         => 'paid',
+                'type'           => $request->input('card_type'),
+                'payment_method' => $invoice->order->payment->method,
+                'amount' => $total_amount,
+                'order_id'       => $invoice->order->id,
+                'invoice_id'     => $invoice->id,
+                'data'           => json_encode($request->all()),
+            ]);
         }
         
         Cart::deActivateCart();
@@ -167,6 +154,7 @@ class SslCommerzPaymentController extends Controller
         session()->flash('order_id', $order->id);
 
         return redirect()->route('shop.checkout.onepage.success');
+        
         
         }
     }
@@ -191,12 +179,62 @@ class SslCommerzPaymentController extends Controller
 
         return redirect()->route('shop.checkout.cart.index');
     }
+    
+    protected function ipnprepareInvoiceData(): array
+    {
+        $invoiceData = [
+            'order_id' => $this->iorder->id,
+        ];
+
+        foreach ($this->iorder->items as $item) {
+            $invoiceData['invoice']['items'][$item->id] = $item->qty_to_invoice;
+        }
+
+        return $invoiceData;
+    }
 
     /*
     Feature Request
       */
     public function ipn(Request $request)
     {
+        $tran_id = $request->input('tran_id');
+        $amount = $request->input('amount');
+        $currency = $request->input('currency');
+        $this->iorder = $this->orderRepository->findOneByField(['cart_id' => $tran_id]);
+        //$cart = Cart::getCart();
+        
+       // $shipping_rate = $cart->selected_shipping_rate ? $cart->selected_shipping_rate->price : 0; // shipping rate
+        //$discount_amount = $cart->discount_amount; // discount amount
+        $total_amount = $this->iorder->grand_total; // total amount
+        //$information = $cart->billing_address;
+        $cart_currency = $this->iorder->cart_currency_code;
+        $sslc = new SslCommerzNotification();
+        $validation = $sslc->orderValidate($request->all(), $tran_id, $total_amount, $cart_currency);
+        
+        if ($validation == true) {
+            
+        $this->orderRepository->update(['status' => 'processing'], $this->iorder->id);
+        $this->savePaymentTransactionId($this->iorder->id, $tran_id);
+
+        if ($this->iorder->canInvoice()) {
+            $invoice = $this->invoiceRepository->create($this->ipnprepareInvoiceData());
+            
+            $this->OrderTransactionRepository->updateOrCreate([
+                'transaction_id' => $request->input('bank_tran_id'),
+                'status'         => 'paid',
+                'type'           => $request->input('card_type'),
+                'payment_method' => $invoice->iorder->payment->method,
+                'amount' => $total_amount,
+                'order_id'       => $invoice->iorder->id,
+                'invoice_id'     => $invoice->id,
+                'data'           => json_encode($request->all()),
+            ]);
+        }
+        
+        //Cart::deActivateCart();
+        
+        }
     }
     
     protected function savePaymentTransactionId(int $orderId, string $tran): void

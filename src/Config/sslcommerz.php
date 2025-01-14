@@ -17,5 +17,5 @@ return [
     'success_url' => 'sslcommerz.success',
     'failed_url' => 'sslcommerz.fail',
     'cancel_url' => 'sslcommerz.fail',
-    'ipn_url' => 'sslcommerz.ipn',
+    'ipn_url' => '',
 ];

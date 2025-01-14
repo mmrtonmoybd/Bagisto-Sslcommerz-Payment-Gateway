@@ -221,10 +221,13 @@ class SslCommerzNotification extends AbstractSslCommerz
 
         // Set the required/additional params
         $this->setParams($requestData);
+        
+        
 
         // Set the authentication information
         $this->setAuthenticationInfo();
-
+        
+         //dd($requestData, $this->data);
         // Now, call the Gateway API
         $response = $this->callToApi($this->data, $header, core()->getConfigData('sales.payment_methods.sslcommerz.sslcommerz_connect_from_localhost'));
 
@@ -323,7 +326,7 @@ class SslCommerzNotification extends AbstractSslCommerz
          * Important! Not mandatory, however better to use to avoid missing any payment notification - It is the Instant Payment Notification (IPN) URL of your website where SSLCOMMERZ will send the transaction's status (Length: 255).
          * The data will be communicated as SSLCOMMERZ Server to your Server. So, customer session will not work.
          * */
-        $this->data['ipn_url'] = (isset($info['ipn_url'])) ? $info['ipn_url'] : null;
+        $this->data['ipn_url'] = (!empty($this->config['ipn_url'])) ? route($this->config['ipn_url']) : null;
 
         /*
          * Type: string (30)
