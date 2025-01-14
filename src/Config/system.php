@@ -54,12 +54,12 @@ return [
                 'locale_based' => true,
             ],
             [
-                'name'          => 'image',
-                'title'         => 'sslcommerz::app.sslcommerz.system.image',
-                'info'          => 'admin::app.configuration.index.sales.payment-methods.logo-information',
-                'type'          => 'file',
+                'name' => 'image',
+                'title' => 'sslcommerz::app.sslcommerz.system.image',
+                'info' => 'admin::app.configuration.index.sales.payment-methods.logo-information',
+                'type' => 'file',
                 'channel_based' => false,
-                'locale_based'  => true,
+                'locale_based' => true,
             ],
             [
                 'name' => 'active',
