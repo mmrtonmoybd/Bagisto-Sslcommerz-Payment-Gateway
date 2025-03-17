@@ -11,6 +11,7 @@ use Webkul\Sales\Repositories\InvoiceRepository;
 use Webkul\Sales\Repositories\OrderRepository;
 use Webkul\Sales\Repositories\OrderTransactionRepository;
 use Webkul\Sales\Transformers\OrderResource;
+use Mmrtonmoybd\Sslcommerz\Exceptions\SSLCommerzException;
 
 class SslCommerzPaymentController extends Controller
 {
@@ -50,6 +51,15 @@ class SslCommerzPaymentController extends Controller
         // Let's say, your oder transaction informations are saving in a table called "orders"
         // In "orders" table, order unique identity is "transaction_id". "status" field contain status of the transaction, "amount" is the order amount to be paid and "currency" is for storing Site Currency which will be checked with paid currency.
         $cart = Cart::getCart();
+
+        if (!$cart) {
+            return redirect()->route('shop.checkout.cart.index')->with('error', 'Cart not found');
+        }
+
+        if ($cart->haveStockableItems() && !$cart->selected_shipping_rate) {
+            return redirect()->route('shop.checkout.cart.index')->with('error', 'Please select a shipping method before proceeding.');
+        }
+
         $shipping_rate = $cart->selected_shipping_rate ? $cart->selected_shipping_rate->price : 0; // shipping rate
         $discount_amount = $cart->discount_amount; // discount amount
         $total_amount = $cart->grand_total; // total amount
@@ -61,7 +71,7 @@ class SslCommerzPaymentController extends Controller
         $post_data['tran_id'] = $cart->id; // tran_id must be unique
 
         // CUSTOMER INFORMATION
-        $post_data['cus_name'] = $information->first_name.' '.$information->last_name;
+        $post_data['cus_name'] = $information->first_name . ' ' . $information->last_name;
         $post_data['cus_email'] = $information->email;
         $post_data['cus_add1'] = $information->address1;
         $post_data['cus_add2'] = $information->address2;
@@ -112,46 +122,79 @@ class SslCommerzPaymentController extends Controller
 
     public function success(Request $request)
     {
-        $tran_id = $request->input('tran_id');
-        $amount = $request->input('amount');
-        $currency = $request->input('currency');
-        $cart = Cart::getCart();
+        try {
+            $tran_id = $request->input('tran_id');
+            $cart = Cart::getCart();
 
-        $shipping_rate = $cart->selected_shipping_rate ? $cart->selected_shipping_rate->price : 0; // shipping rate
-        $discount_amount = $cart->discount_amount; // discount amount
-        $total_amount = $cart->grand_total; // total amount
-        $information = $cart->billing_address;
-        $cart_currency = $cart->cart_currency_code;
-        $sslc = new SslCommerzNotification();
-        $validation = $sslc->orderValidate($request->all(), $cart->id, $total_amount, $cart_currency);
-
-        if ($validation == true) {
-            $data = (new OrderResource($cart))->jsonSerialize();
-
-            $order = $this->orderRepository->create($data);
-
-            $this->savePaymentTransactionId($order['id'], $tran_id);
-
-            if ($order->canInvoice()) {
-                $invoice = $this->invoiceRepository->create($this->prepareInvoiceData($order));
-
-                $this->OrderTransactionRepository->updateOrCreate([
-                    'transaction_id' => $request->input('bank_tran_id'),
-                    'status' => 'paid',
-                    'type' => $request->input('card_type'),
-                    'payment_method' => $invoice->order->payment->method,
-                    'amount' => $total_amount,
-                    'order_id' => $invoice->order->id,
-                    'invoice_id' => $invoice->id,
-                    'data' => json_encode($request->all()),
-                ]);
+            if (!$cart && $tran_id) {
+                $cart = app(\Webkul\Checkout\Repositories\CartRepository::class)->find($tran_id);
+                if ($cart) {
+                    Cart::setCart($cart);
+                }
             }
 
-            Cart::deActivateCart();
+            if (!$cart) {
+                throw new SSLCommerzException('Cart not found or has been cleared');
+            }
 
-            session()->flash('order_id', $order->id);
+            if ($cart->haveStockableItems() && !$cart->selected_shipping_rate) {
+                throw new SSLCommerzException('Shipping method not found or has been cleared. Please try again.');
+            }
 
-            return redirect()->route('shop.checkout.onepage.success');
+            // Validate billing information
+            if (!$cart->billing_address) {
+                throw new SSLCommerzException('Billing information is missing');
+            }
+
+            Cart::collectTotals();
+
+            $shipping_rate = $cart->selected_shipping_rate ? $cart->selected_shipping_rate->price : 0; // shipping rate
+            $discount_amount = $cart->discount_amount; // discount amount
+            $total_amount = $cart->grand_total; // total amount
+            $information = $cart->billing_address;
+            $cart_currency = $cart->cart_currency_code;
+            $sslc = new SslCommerzNotification();
+            $validation = $sslc->orderValidate($request->all(), $cart->id, $total_amount, $cart_currency);
+
+            if ($validation == true) {
+                $data = (new OrderResource($cart))->jsonSerialize();
+
+                $order = $this->orderRepository->create($data);
+
+                $this->savePaymentTransactionId($order['id'], $tran_id);
+
+                if ($order->canInvoice()) {
+                    try {
+                        $invoice = $this->invoiceRepository->create($this->prepareInvoiceData($order));
+
+                        $this->OrderTransactionRepository->updateOrCreate([
+                            'transaction_id' => $request->input('bank_tran_id'),
+                            'status' => 'paid',
+                            'type' => $request->input('card_type'),
+                            'payment_method' => $invoice->order->payment->method,
+                            'amount' => $total_amount,
+                            'order_id' => $invoice->order->id,
+                            'invoice_id' => $invoice->id,
+                            'data' => json_encode($request->all()),
+                        ]);
+                    } catch (\Exception $e) {
+                        \Log::error('SSLCommerz Invoice Creation Error: ' . $e->getMessage());
+                        // Optionally throw or handle invoice creation error
+                    }
+                }
+
+                Cart::deActivateCart();
+                session()->flash('order_id', $order->id);
+                return redirect()->route('shop.checkout.onepage.success');
+            }
+        } catch (SSLCommerzException $e) {
+            \Log::error('SSLCommerz Payment Error: ' . $e->getMessage());
+            session()->flash('error', $e->getMessage());
+            return redirect()->route('shop.checkout.cart.index');
+        } catch (\Exception $e) {
+            \Log::error('SSLCommerz Unexpected Error: ' . $e->getMessage());
+            session()->flash('error', 'An unexpected error occurred during payment processing');
+            return redirect()->route('shop.checkout.cart.index');
         }
     }
 
@@ -200,7 +243,7 @@ class SslCommerzPaymentController extends Controller
         $this->iorder = $this->orderRepository->findOneByField(['cart_id' => $tran_id]);
         //$cart = Cart::getCart();
 
-       // $shipping_rate = $cart->selected_shipping_rate ? $cart->selected_shipping_rate->price : 0; // shipping rate
+        // $shipping_rate = $cart->selected_shipping_rate ? $cart->selected_shipping_rate->price : 0; // shipping rate
         //$discount_amount = $cart->discount_amount; // discount amount
         $total_amount = $this->iorder->grand_total; // total amount
         //$information = $cart->billing_address;
