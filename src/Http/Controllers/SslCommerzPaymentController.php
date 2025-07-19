@@ -3,6 +3,7 @@
 namespace Mmrtonmoybd\Sslcommerz\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Mmrtonmoybd\Sslcommerz\Exceptions\SSLCommerzException;
 use Mmrtonmoybd\Sslcommerz\Library\SslCommerz\SslCommerzNotification;
 use Webkul\Checkout\Facades\Cart;
 use Webkul\Sales\Contracts\Order;
@@ -11,7 +12,6 @@ use Webkul\Sales\Repositories\InvoiceRepository;
 use Webkul\Sales\Repositories\OrderRepository;
 use Webkul\Sales\Repositories\OrderTransactionRepository;
 use Webkul\Sales\Transformers\OrderResource;
-use Mmrtonmoybd\Sslcommerz\Exceptions\SSLCommerzException;
 
 class SslCommerzPaymentController extends Controller
 {
@@ -52,11 +52,11 @@ class SslCommerzPaymentController extends Controller
         // In "orders" table, order unique identity is "transaction_id". "status" field contain status of the transaction, "amount" is the order amount to be paid and "currency" is for storing Site Currency which will be checked with paid currency.
         $cart = Cart::getCart();
 
-        if (!$cart) {
+        if (! $cart) {
             return redirect()->route('shop.checkout.cart.index')->with('error', 'Cart not found');
         }
 
-        if ($cart->haveStockableItems() && !$cart->selected_shipping_rate) {
+        if ($cart->haveStockableItems() && ! $cart->selected_shipping_rate) {
             return redirect()->route('shop.checkout.cart.index')->with('error', 'Please select a shipping method before proceeding.');
         }
 
@@ -71,7 +71,7 @@ class SslCommerzPaymentController extends Controller
         $post_data['tran_id'] = $cart->id; // tran_id must be unique
 
         // CUSTOMER INFORMATION
-        $post_data['cus_name'] = $information->first_name . ' ' . $information->last_name;
+        $post_data['cus_name'] = $information->first_name.' '.$information->last_name;
         $post_data['cus_email'] = $information->email;
         $post_data['cus_add1'] = $information->address1;
         $post_data['cus_add2'] = $information->address2;
@@ -126,23 +126,23 @@ class SslCommerzPaymentController extends Controller
             $tran_id = $request->input('tran_id');
             $cart = Cart::getCart();
 
-            if (!$cart && $tran_id) {
+            if (! $cart && $tran_id) {
                 $cart = app(\Webkul\Checkout\Repositories\CartRepository::class)->find($tran_id);
                 if ($cart) {
                     Cart::setCart($cart);
                 }
             }
 
-            if (!$cart) {
+            if (! $cart) {
                 throw new SSLCommerzException('Cart not found or has been cleared');
             }
 
-            if ($cart->haveStockableItems() && !$cart->selected_shipping_rate) {
+            if ($cart->haveStockableItems() && ! $cart->selected_shipping_rate) {
                 throw new SSLCommerzException('Shipping method not found or has been cleared. Please try again.');
             }
 
             // Validate billing information
-            if (!$cart->billing_address) {
+            if (! $cart->billing_address) {
                 throw new SSLCommerzException('Billing information is missing');
             }
 
@@ -178,22 +178,25 @@ class SslCommerzPaymentController extends Controller
                             'data' => json_encode($request->all()),
                         ]);
                     } catch (\Exception $e) {
-                        \Log::error('SSLCommerz Invoice Creation Error: ' . $e->getMessage());
+                        \Log::error('SSLCommerz Invoice Creation Error: '.$e->getMessage());
                         // Optionally throw or handle invoice creation error
                     }
                 }
 
                 Cart::deActivateCart();
                 session()->flash('order_id', $order->id);
+
                 return redirect()->route('shop.checkout.onepage.success');
             }
         } catch (SSLCommerzException $e) {
-            \Log::error('SSLCommerz Payment Error: ' . $e->getMessage());
+            \Log::error('SSLCommerz Payment Error: '.$e->getMessage());
             session()->flash('error', $e->getMessage());
+
             return redirect()->route('shop.checkout.cart.index');
         } catch (\Exception $e) {
-            \Log::error('SSLCommerz Unexpected Error: ' . $e->getMessage());
+            \Log::error('SSLCommerz Unexpected Error: '.$e->getMessage());
             session()->flash('error', 'An unexpected error occurred during payment processing');
+
             return redirect()->route('shop.checkout.cart.index');
         }
     }
